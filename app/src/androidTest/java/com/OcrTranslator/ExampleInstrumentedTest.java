@@ -1,4 +1,4 @@
-package com.OcrTranslation;
+package com.OcrTranslator;
 
 import android.content.Context;
 
