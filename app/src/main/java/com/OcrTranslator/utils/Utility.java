@@ -15,15 +15,14 @@ import java.util.List;
 
 public class Utility {
 
-    public static List<OcrResult> handleOcrResultResponse(String response) {
+    public static OcrResult handleOcrResultResponse(String response) {
         Log.d("handleOcrResultResponse",response);
-        if (!TextUtils.isEmpty(response)) {
+        if(!TextUtils.isEmpty(response)){
             try {
                 Gson gson = new Gson();
-                JSONObject ocrResultObject = new JSONObject(response);
-                String OcrResult = ocrResultObject.getString("words_result");
-                List<OcrResult> ocrResultList = gson.fromJson(OcrResult, new TypeToken<List<OcrResult>>(){}.getType());
-                return ocrResultList;
+                JSONObject result = new JSONObject(response);
+                String data = result.getString("data");
+                return gson.fromJson(data, OcrResult.class);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -38,8 +37,7 @@ public class Utility {
                 Gson gson = new Gson();
                 JSONObject jsonObject1 = new JSONObject(response);
                 String transResult = jsonObject1.getString("trans_result");
-                List<TransResult> transResults = gson.fromJson(transResult, new TypeToken<List<TransResult>>(){}.getType());
-                return transResults;
+                return gson.fromJson(transResult, new TypeToken<List<TransResult>>(){}.getType());
             } catch (JSONException e) {
                 e.printStackTrace();
             }

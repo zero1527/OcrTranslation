@@ -23,12 +23,9 @@
                app to run.
         -->
 
-        <activity android:name=".TransImageActivity" android:launchMode="singleTask" />
-        <activity android:name=".OpenAlbumActivity" />
-        <activity android:name=".CameraActivity" />
+        <activity android:name=".OcrActivity" android:launchMode="singleInstance" />
         <activity
             android:name=".MainActivity"
-            android:label="OCR翻译器"
             android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

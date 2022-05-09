@@ -19,20 +19,7 @@ import okhttp3.Request;
  */
 public class HttpUtil {
 
-//    public static String sendHttpRequest(String address){
-//        HttpURLConnection connection = null;
-//        try {
-//            URL url = new URL(address);
-//            connection = (HttpURLConnection) url.openConnection();
-//
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return
-//    }
-
-    public static void sendOkHttpRequest(String address, okhttp3.Callback callback) {
+    public static void sendOkHttpRequest(String address, Callback callback) {
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder().url(address).build();
         client.newCall(request).enqueue(callback);
@@ -92,13 +79,13 @@ public class HttpUtil {
         BufferedReader in = null;
         in = new BufferedReader(
                 new InputStreamReader(connection.getInputStream(), encoding));
-        String result = "";
+        StringBuilder result = new StringBuilder();
         String getLine;
         while ((getLine = in.readLine()) != null) {
-            result += getLine;
+            result.append(getLine);
         }
         in.close();
         System.err.println("result:" + result);
-        return result;
+        return result.toString();
     }
 }

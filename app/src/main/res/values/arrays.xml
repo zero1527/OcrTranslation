@@ -12,8 +12,11 @@
         <item>西班牙语</item>
         <item>葡萄牙语</item>
         <item>阿拉伯语</item>
-        <item>繁体中文</item>
-        <item>文言文</item>
+        <item>印尼语</item>
+        <item>土耳其语</item>
+        <item>希腊语</item>
+<!--        <item>繁体中文</item>-->
+<!--        <item>文言文</item>-->
     </string-array>
     <string-array name="languageList2">
         <item>中文</item>
@@ -26,7 +29,10 @@
         <item>西班牙语</item>
         <item>葡萄牙语</item>
         <item>阿拉伯语</item>
-        <item>繁体中文</item>
-        <item>文言文</item>
+        <item>印尼语</item>
+        <item>土耳其语</item>
+        <item>希腊语</item>
+<!--        <item>繁体中文</item>-->
+<!--        <item>文言文</item>-->
     </string-array>
 </resources>

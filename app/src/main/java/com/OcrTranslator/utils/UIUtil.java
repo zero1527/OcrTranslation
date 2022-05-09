@@ -35,7 +35,7 @@ public class UIUtil {
     public static boolean hasNotchScreen(Activity activity) {
         try {
 
-            if (getInt("ro.miui.notch", activity) == 1 || // 小米刘海屏判断
+            if (getInt(activity) == 1 || // 小米刘海屏判断
                     hasNotchAtHuawei(activity) || // 华为刘海屏判断
                     hasNotchAtOPPO(activity) || // OPPO刘海屏判断
                     hasNotchAtVivo(activity) || // Vivo刘海屏判断
@@ -54,10 +54,9 @@ public class UIUtil {
 
     // Android P 刘海屏判断
     @TargetApi(28)
-    @SuppressWarnings({"unchecked", "deprecation"})
     private static DisplayCutout isAndroidP(Activity activity) {
         View decorView = activity.getWindow().getDecorView();
-        if (decorView != null && android.os.Build.VERSION.SDK_INT >= 28) {
+        if (decorView != null && Build.VERSION.SDK_INT >= 28) {
             WindowInsets windowInsets = decorView.getRootWindowInsets();
             if (windowInsets != null)
                 return windowInsets.getDisplayCutout();
@@ -67,7 +66,6 @@ public class UIUtil {
 
 
     // 获取状态栏高度
-    @SuppressWarnings({"unchecked", "deprecation"})
     public static int getBarHeight(Activity activity) {
         int resourceId = activity.getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (resourceId > 0) {
@@ -81,8 +79,8 @@ public class UIUtil {
     }
 
     // 小米刘海屏判断
-    @SuppressWarnings({"unchecked", "deprecation"})
-    private static int getInt(String key, Activity activity) {
+    @SuppressWarnings({"unchecked"})
+    private static int getInt(Activity activity) {
         int result = 0;
         if (isXiaomi()) {
             try {
@@ -97,19 +95,11 @@ public class UIUtil {
                 Method getInt = SystemProperties.getMethod("getInt", paramTypes);
                 //参数
                 Object[] params = new Object[2];
-                params[0] = new String(key);
-                params[1] = new Integer(0);
+                params[0] = new String("ro.miui.notch");
+                params[1] = 0;
                 result = (Integer) getInt.invoke(SystemProperties, params);
 
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (IllegalArgumentException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
+            } catch (ClassNotFoundException | NoSuchMethodException | IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
             }
         }
@@ -117,7 +107,7 @@ public class UIUtil {
     }
 
     // 华为刘海屏判断
-    @SuppressWarnings({"finally", "unchecked", "deprecation"})
+    @SuppressWarnings({"finally", "unchecked"})
     private static boolean hasNotchAtHuawei(Context context) {
         boolean ret = false;
         try {
@@ -125,9 +115,7 @@ public class UIUtil {
             Class HwNotchSizeUtil = classLoader.loadClass("com.huawei.android.util.HwNotchSizeUtil");
             Method get = HwNotchSizeUtil.getMethod("hasNotchInScreen");
             ret = (Boolean) get.invoke(HwNotchSizeUtil);
-        } catch (ClassNotFoundException e) {
-        } catch (NoSuchMethodException e) {
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         } finally {
             return ret;
         }
@@ -137,7 +125,7 @@ public class UIUtil {
     private static final int VIVO_FILLET = 0x00000008;//是否有圆角
 
     // VIVO刘海屏判断
-    @SuppressWarnings({"finally", "unchecked", "deprecation"})
+    @SuppressWarnings({"finally", "unchecked"})
     private static boolean hasNotchAtVivo(Context context) {
         boolean ret = false;
         try {
@@ -145,9 +133,7 @@ public class UIUtil {
             Class FtFeature = classLoader.loadClass("android.util.FtFeature");
             Method method = FtFeature.getMethod("isFeatureSupport", int.class);
             ret = (Boolean) method.invoke(FtFeature, VIVO_NOTCH);
-        } catch (ClassNotFoundException e) {
-        } catch (NoSuchMethodException e) {
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         } finally {
             return ret;
         }

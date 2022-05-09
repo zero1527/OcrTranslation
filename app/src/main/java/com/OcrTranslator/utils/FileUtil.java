@@ -42,10 +42,9 @@ public class FileUtil {
         if (!file.exists()) {
             throw new FileNotFoundException(filePath);
         } else {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream((int) file.length());
-            BufferedInputStream in = null;
 
-            try {
+            try (ByteArrayOutputStream bos = new ByteArrayOutputStream((int) file.length())) {
+                BufferedInputStream in = null;
                 in = new BufferedInputStream(new FileInputStream(file));
                 short bufSize = 1024;
                 byte[] buffer = new byte[bufSize];
@@ -56,17 +55,34 @@ public class FileUtil {
 
                 byte[] var7 = bos.toByteArray();
                 return var7;
-            } finally {
-                try {
-                    if (in != null) {
-                        in.close();
-                    }
-                } catch (IOException var14) {
-                    var14.printStackTrace();
-                }
-
-                bos.close();
             }
+        }
+    }
+
+    /**
+     * Creates MD5 digest of a {@link File}.
+     *
+     * @param file {@link File} to create digest of.
+     * @return MD5 digest of the {@link File}.
+     */
+    public static String md5(final File file) {
+        try {
+            return DigestEngine.md5().digestString(file);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    /**
+     * Creates MD5 digest of a {@link String}.
+     */
+    public static String md5(final String content) {
+        try {
+            return DigestEngine.md5().digestString(content);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
         }
     }
 }

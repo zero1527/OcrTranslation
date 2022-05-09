@@ -9,13 +9,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-
-/**
- * Author:Stephen
- * Blog: https://me.csdn.net/jifenglie
- * Date:2020/3/16
- * Description:
- */
+import android.widget.Toast;
 
 public class FloatBallView {
 
@@ -26,12 +20,12 @@ public class FloatBallView {
 
     private int width = 0;
 
-    public static com.OcrTranslator.FloatBallView floatView2;
+    public static FloatBallView floatView2;
 
 
-    public static com.OcrTranslator.FloatBallView getInstance(Context context) {
+    public static FloatBallView getInstance(Context context) {
         if (floatView2 == null) {
-            floatView2 = new com.OcrTranslator.FloatBallView(context);
+            floatView2 = new FloatBallView(context);
         }
         return floatView2;
     }
@@ -133,17 +127,17 @@ public class FloatBallView {
         });
         try {
             wm.addView(view, params);
-        } catch (Exception e) {
+        } catch (Exception ignored) {
 
         }
 
-        /*floatView2.onFloatViewClick(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-//这边是点击悬浮按钮的响应事件
-                Toast.makeText(context, "点击了悬浮球", Toast.LENGTH_LONG);
-            }
-        });*/
+//        floatView2.onFloatViewClick(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+////这边是点击悬浮按钮的响应事件
+//                Toast.makeText(context, "点击了悬浮球", Toast.LENGTH_LONG);
+//            }
+//        });
     }
 
     /**
@@ -163,50 +157,9 @@ public class FloatBallView {
     public void removeFloatView() {
         if (wm != null && view != null) {
             wm.removeViewImmediate(view);
-// wm.removeView(view);//不要调用这个，WindowLeaked
             view = null;
             wm = null;
         }
-    }
-
-    /**
-     * 隐藏悬浮View
-     */
-
-    public void hideFloatView() {
-        if (wm != null && view != null && view.isShown()) {
-            view.setVisibility(View.GONE);
-        }
-    }
-
-    /**
-     * 显示悬浮View
-     */
-
-    public void showFloatView() {
-        if (wm != null && view != null && !view.isShown()) {
-            view.setVisibility(View.VISIBLE);
-        }
-    }
-
-    public void updateViewLayout() {
-        if (wm != null) {
-            int screenWidth = (int) 480;
-            int screenHeight = (int) 720;
-            if (screenWidth == 0) {
-                screenWidth = context.getResources().getDisplayMetrics().widthPixels;
-            }
-
-            if (screenHeight == 0) {
-                screenHeight = context.getResources().getDisplayMetrics().heightPixels;
-                params.y = screenHeight - height / 3;//设置距离底部高度为屏幕三分之一
-            } else {
-                params.y = screenHeight;
-            }
-            params.x = screenWidth;
-            wm.updateViewLayout(view, params);
-        }
-
     }
 
 }

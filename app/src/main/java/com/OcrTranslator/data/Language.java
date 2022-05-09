@@ -1,29 +1,14 @@
-package com.OcrTranslator.service;
+package com.OcrTranslator.data;
 
-import android.app.Application;
-import android.content.Context;
-import android.util.Log;
 
-import com.OcrTranslator.MyApplication;
-import com.OcrTranslator.R;
-import com.OcrTranslator.utils.MD5;
+public class Language {
 
-import java.net.URLEncoder;
-import java.util.List;
+    private String from;
 
-public class TransService {
+    private String to;
 
-    Context context = MyApplication.getContext();
+    public String parseFrom (String language1) {
 
-    public String TransResult(List<String> text, String language1, String language2) {
-
-        String url = context.getString(R.string.url);
-
-        String ak = context.getString(R.string.ak);
-
-        String sk = context.getString(R.string.sk);
-
-        String from = "";
         switch (language1) {
             case "自动检测":
                 from = "auto";
@@ -67,16 +52,14 @@ public class TransService {
             case "希腊语":
                 from = "el";
                 break;
-//            case "繁体中文":
-//                from = "cht";
-//                break;
-//            case "文言文":
-//                from = "wyw";
-//                break;
             default:
         }
 
-        String to = "";
+        return from;
+    }
+
+    public String parseTo (String language2) {
+
         switch (language2) {
             case "中文":
                 to = "zh";
@@ -117,32 +100,9 @@ public class TransService {
             case "希腊语":
                 to = "el";
                 break;
-//            case "繁体中文":
-//                to = "cht";
-//                break;
-//            case "文言文":
-//                to = "wyw";
-//                break;
             default:
         }
 
-        try {
-            StringBuilder q = new StringBuilder();
-            for (int i = 0;i < text.size(); i++){
-                q.append(text.get(i)).append("\n");
-            }
-            Log.d("TransTask", q.toString());
-            String q2 = URLEncoder.encode(q.toString(), "UTF-8").replace("+", "%20");
-            String salt = String.valueOf(System.currentTimeMillis());
-            String a = ak + q + salt + sk;
-            String sign = MD5.md5(a);
-            String address = url + "?q=" + q2 + "&from=" + from + "&to=" + to +
-                    "&appid=" + ak + "&salt=" + salt + "&sign=" +sign;
-            Log.d("TransResult",address);
-            return address;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
+        return to;
     }
 }
