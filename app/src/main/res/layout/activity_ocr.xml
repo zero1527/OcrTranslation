@@ -33,7 +33,7 @@
     </ScrollView>
 
     <LinearLayout
-        android:id="@+id/imageLayout"
+        android:id="@+id/switchover_layout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="80dp"

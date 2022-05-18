@@ -9,32 +9,14 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 public class FloatBallView {
-
-
-    private Context context;
 
     private int height = 0;
 
     private int width = 0;
 
-    public static FloatBallView floatView2;
-
-
-    public static FloatBallView getInstance(Context context) {
-        if (floatView2 == null) {
-            floatView2 = new FloatBallView(context);
-        }
-        return floatView2;
-    }
-
-    public FloatBallView(Context c) {
-
-        this.context = c;
-
-    }
+    private View.OnClickListener l;
 
     private WindowManager wm;
 
@@ -48,7 +30,7 @@ public class FloatBallView {
      * @param
      */
 
-    public void createFloatView() {
+    public void createFloatView(Context context) {
 
         if (view == null) {
             view = LayoutInflater.from(context).inflate(R.layout.floatview, null);
@@ -74,10 +56,15 @@ public class FloatBallView {
         params.gravity = Gravity.TOP | Gravity.LEFT;
         int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
         int screenHeight = context.getResources().getDisplayMetrics().heightPixels;
-        params.y = screenHeight - height / 3;//设置距离底部高度为屏幕三分之一
+        params.y = screenHeight - height / 2;//设置距离底部高度为屏幕三分之一
         params.x = screenWidth;
         view.setBackgroundColor(Color.TRANSPARENT);
         view.setVisibility(View.VISIBLE);
+        try {
+            wm.addView(view, params);
+        } catch (Exception ignored) {
+
+        }
         view.setOnTouchListener(new View.OnTouchListener() {
             // 触屏监听
             float lastX, lastY;
@@ -106,7 +93,7 @@ public class FloatBallView {
                 } else if (action == MotionEvent.ACTION_UP) {
                     int newOffsetX = params.x;
                     int newOffsetY = params.y;
-// 只要按钮一动位置不是很大,就认为是点击事件
+                    // 只要按钮一动位置不是很大,就认为是点击事件
                     if (Math.abs(oldOffsetX - newOffsetX) <= 20
                             && Math.abs(oldOffsetY - newOffsetY) <= 20) {
                         if (l != null) {
@@ -125,26 +112,11 @@ public class FloatBallView {
                 return true;
             }
         });
-        try {
-            wm.addView(view, params);
-        } catch (Exception ignored) {
-
-        }
-
-//        floatView2.onFloatViewClick(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-////这边是点击悬浮按钮的响应事件
-//                Toast.makeText(context, "点击了悬浮球", Toast.LENGTH_LONG);
-//            }
-//        });
     }
 
     /**
      * 点击浮动按钮触发事件，需要override该方法
      */
-
-    private View.OnClickListener l;
 
     public void onFloatViewClick(View.OnClickListener l) {
         this.l = l;
@@ -161,6 +133,5 @@ public class FloatBallView {
             wm = null;
         }
     }
-
 }
 

@@ -121,7 +121,7 @@ public class ScreenshotService extends Service {
                 File screenImage = new File(getExternalCacheDir(),"screen_image.jpg");
                 try {
                     FileOutputStream fos = new FileOutputStream(screenImage);
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 20, fos);
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
                     fos.flush();
                     fos.close();
                 } catch (IOException e) {

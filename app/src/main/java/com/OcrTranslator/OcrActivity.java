@@ -26,7 +26,7 @@ import com.OcrTranslator.gson.OcrResult;
 import com.OcrTranslator.http.HttpStringCallback;
 import com.OcrTranslator.pic.PicTranslate;
 import com.OcrTranslator.utils.UIUtil;
-import com.OcrTranslator.utils.Utility;
+import com.OcrTranslator.utils.JsonParse;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -39,7 +39,7 @@ public class OcrActivity extends AppCompatActivity {
 
     private String path;
 
-    private LinearLayout imageLayout;
+    private LinearLayout switchoverLayout;
 
     private Spinner from;
 
@@ -72,10 +72,21 @@ public class OcrActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
         UIUtil.fullINScreen(getWindow());
         setContentView(R.layout.activity_ocr);
-        imageLayout = findViewById(R.id.imageLayout);
-        imageLayout.setVisibility(View.GONE);
+        switchoverLayout = findViewById(R.id.switchover_layout);
+        switchoverLayout.setVisibility(View.GONE);
         transImage = findViewById(R.id.transImage);
         progressBar = findViewById(R.id.transImageProgressBar);
+
+        Intent intent = getIntent();
+        if (intent != null) {
+            path = intent.getStringExtra("path");
+            Language language = new Language();
+            language1 = language.parseFrom(intent.getStringExtra("from"));
+            language2 = language.parseTo(intent.getStringExtra("to"));
+            REQUEST_SCREENSHOT = intent.getBooleanExtra("requestScreenshot", false);
+            displayImage(path, language1, language2);
+            Log.d(TAG,path);
+        }
 
         //        翻译语言切换
         from = findViewById(R.id.imageLanguage1);
@@ -102,21 +113,6 @@ public class OcrActivity extends AppCompatActivity {
         from.setVisibility(View.GONE);
         to.setVisibility(View.GONE);
         switchover.setVisibility(View.GONE);
-
-        Intent intent = getIntent();
-        if (intent != null) {
-            Uri uri = intent.getParcelableExtra("uri");
-            path = intent.getStringExtra("path");
-            Language language = new Language();
-            language1 = language.parseFrom(intent.getStringExtra("from"));
-            language2 = language.parseTo(intent.getStringExtra("to"));
-            REQUEST_SCREENSHOT = intent.getBooleanExtra("requestScreenshot", false);
-            if (path == null) {
-                path = uri.getPath();
-            }
-            displayImage(path, language1, language2);
-            Log.d(TAG,path);
-        }
 
         ImageView exit = findViewById(R.id.exit);
         exit.setOnClickListener(view -> finish());
@@ -165,54 +161,48 @@ public class OcrActivity extends AppCompatActivity {
         PicTranslate picTranslate = new PicTranslate();
         picTranslate.setConfig(config);
 
-        new Thread(new Runnable() {
+        picTranslate.trans(new HttpStringCallback() {
             @Override
-            public void run() {
-                picTranslate.trans(new HttpStringCallback() {
-                    @Override
-                    protected void onSuccess(String response) {
-                        super.onSuccess(response);
-                        Log.d(TAG,response);
-                        ocrResult = Utility.handleOcrResultResponse(response);
+            protected void onSuccess(String response) {
+                super.onSuccess(response);
+                Log.d(TAG,response);
+                ocrResult = JsonParse.handleOcrResultResponse(response);
 
-                        runOnUiThread(() -> {
-                            Base64.Decoder decoder = Base64.getDecoder();
-                            try {
-                                //Base64解码
-                                byte[] b = decoder.decode(ocrResult.pasteImg);
-                                // 处理数据
-                                for (int i = 0; i < b.length; ++i) {
-                                    //调整异常数据
-                                    if (b[i] < 0) {
-                                        b[i] += 256;
-                                    }
-                                }
-                                //文件夹不存在则自动创建
-                                File ocrTransImage = new File(getExternalCacheDir(),"ocrTrans.jpg");
-                                OutputStream out = new FileOutputStream(ocrTransImage);
-                                out.write(b);
-                                out.flush();
-                                out.close();
-                                transImage.setImageURI(Uri.fromFile(ocrTransImage));
-                                imageLayout.setVisibility(View.VISIBLE);
-                                from.setVisibility(View.VISIBLE);
-                                to.setVisibility(View.VISIBLE);
-                                switchover.setVisibility(View.VISIBLE);
-                                ocrTrans.setVisibility(View.VISIBLE);
-                                copyResult.setVisibility(View.VISIBLE);
-                                progressBar.setVisibility(View.GONE);
-                            } catch (Exception ignored) {
+                runOnUiThread(() -> {
+                    Base64.Decoder decoder = Base64.getDecoder();
+                    try {
+                        //Base64解码
+                        byte[] b = decoder.decode(ocrResult.pasteImg);
+                        // 处理数据
+                        for (int i = 0; i < b.length; ++i) {
+                            //调整异常数据
+                            if (b[i] < 0) {
+                                b[i] += 256;
                             }
-                        });
-                    }
-
-                    @Override
-                    protected void onFailure(Throwable e) {
-                        super.onFailure(e);
+                        }
+                        File ocrTransImage = new File(getExternalCacheDir(),"ocrTrans.jpg");
+                        OutputStream out = new FileOutputStream(ocrTransImage);
+                        out.write(b);
+                        out.flush();
+                        out.close();
+                        transImage.setImageURI(Uri.fromFile(ocrTransImage));
+                        switchoverLayout.setVisibility(View.VISIBLE);
+                        from.setVisibility(View.VISIBLE);
+                        to.setVisibility(View.VISIBLE);
+                        switchover.setVisibility(View.VISIBLE);
+                        ocrTrans.setVisibility(View.VISIBLE);
+                        copyResult.setVisibility(View.VISIBLE);
+                        progressBar.setVisibility(View.GONE);
+                    } catch (Exception ignored) {
                     }
                 });
             }
-        }).start();
+
+            @Override
+            protected void onFailure(Throwable e) {
+                super.onFailure(e);
+            }
+        });
     }
 
     @Override

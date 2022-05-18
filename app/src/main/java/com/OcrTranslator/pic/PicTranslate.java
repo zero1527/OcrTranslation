@@ -1,6 +1,7 @@
 package com.OcrTranslator.pic;
 
 import com.OcrTranslator.data.Config;
+import com.OcrTranslator.data.Const;
 import com.OcrTranslator.http.HttpClient;
 import com.OcrTranslator.http.HttpParams;
 import com.OcrTranslator.http.HttpStringCallback;
@@ -11,7 +12,6 @@ import java.io.File;
  * PicTranslate
  */
 public class PicTranslate {
-    private static final String PIC_URL = "https://fanyi-api.baidu.com/api/trans/sdk/picture";
     private static final String FILE_CONTENT_TYPE = "mutipart/form-data";
 
     private final HttpClient httpClient;
@@ -46,6 +46,6 @@ public class PicTranslate {
         params.put("paste", config.getPaste());
         params.put("erase", config.getErase());
         params.put("sign", PicSigner.sign(config, params));
-        httpClient.post(PIC_URL, params, callback);
+        httpClient.post(Const.PIC_URL, params, callback);
     }
 }

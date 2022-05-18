@@ -52,6 +52,15 @@ public class Language {
             case "希腊语":
                 from = "el";
                 break;
+            case "波兰语":
+                from = "pl";
+                break;
+            case "意大利语":
+                from = "it";
+                break;
+            case "荷兰语":
+                from = "nl";
+                break;
             default:
         }
 
@@ -99,6 +108,15 @@ public class Language {
                 break;
             case "希腊语":
                 to = "el";
+                break;
+            case "波兰语":
+                to = "pl";
+                break;
+            case "意大利语":
+                to = "it";
+                break;
+            case "荷兰语":
+                to = "nl";
                 break;
             default:
         }

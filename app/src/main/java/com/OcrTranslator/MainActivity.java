@@ -1,11 +1,8 @@
 package com.OcrTranslator;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
@@ -46,21 +43,16 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.OcrTranslator.gson.TransResult;
 import com.OcrTranslator.service.ScreenshotService;
-import com.OcrTranslator.service.TransService;
 import com.OcrTranslator.utils.HttpUtil;
-import com.OcrTranslator.utils.Utility;
-import com.google.android.material.navigation.NavigationView;
+import com.OcrTranslator.utils.JsonParse;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -72,8 +64,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
 
-    private DrawerLayout mainLayout;
-
     private String imagePath;
 
     private EditText editText;
@@ -83,8 +73,6 @@ public class MainActivity extends AppCompatActivity {
     private Spinner from;
 
     private Spinner to;
-
-    private Uri photoUri;
 
     private MediaProjectionManager mMediaProjectionManager = null;
 
@@ -123,29 +111,11 @@ public class MainActivity extends AppCompatActivity {
 //        自定义标题栏
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null){
-            actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
-        }
-
-//        滑动菜单
-        mainLayout = findViewById(R.id.mainLayout);
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(item -> {
-            switch (item.getItemId()){
-//                    case R.id.settings:
-//                        Intent intent =new Intent(MainActivity.this, OcrActivity.class);
-//                        startActivity(intent);
-//                        break;
-//                    default:
-            }
-            return false;
-        });
 
 //        翻译语言切换
-        from = findViewById(R.id.language1);
-        to = findViewById(R.id.language2);
+        from = findViewById(R.id.from);
+        to = findViewById(R.id.to);
+        ImageView switchover = findViewById(R.id.switchover);
         ArrayAdapter<CharSequence> adapter1 = ArrayAdapter.createFromResource(
                 this,R.array.languageList1,R.layout.spinnerlayout);
         adapter1.setDropDownViewResource(R.layout.spinnerlayout);
@@ -154,7 +124,6 @@ public class MainActivity extends AppCompatActivity {
                 this,R.array.languageList2,R.layout.spinnerlayout);
         adapter2.setDropDownViewResource(R.layout.spinnerlayout);
         to.setAdapter(adapter2);
-        ImageView switchover = findViewById(R.id.switchover);
         switchover.setOnClickListener(view -> {
             if (from.getSelectedItemId() != 0) {
                 int f = (int)from.getSelectedItemId();
@@ -171,11 +140,10 @@ public class MainActivity extends AppCompatActivity {
         Button trans = findViewById(R.id.translate);
         trans.setOnClickListener(view -> {
             if (editText.getText() != null) {
-                List<String> inputText = new ArrayList<>();
                 String language1 = from.getSelectedItem().toString();
                 String language2 = to.getSelectedItem().toString();
-                inputText.add(editText.getText().toString());
-                trans(inputText,language1,language2);
+                String inputText = editText.getText().toString();
+                translate(inputText,language1,language2);
             }
         });
 
@@ -214,29 +182,29 @@ public class MainActivity extends AppCompatActivity {
         });
 
 //        创建悬浮窗
-        Switch floatView = findViewById(R.id.floatView);
-        floatView.setOnCheckedChangeListener((compoundButton, open) -> {
+        Switch floatViewSwitch = findViewById(R.id.floatViewSwicth);
+        FloatBallView floatBallView = new FloatBallView();
+        floatViewSwitch.setOnCheckedChangeListener((compoundButton, open) -> {
             if (open) {
                 if (!Settings.canDrawOverlays(MainActivity.this)) {
                     //若未授权则请求权限
-                    Intent intent1 = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-                    intent1.setData(Uri.parse("package:" + getPackageName()));
-                    startActivityForResult(intent1, 0);
-                    FloatBallView.getInstance(MainActivity.this).createFloatView();
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                    intent.setData(Uri.parse("package:" + getPackageName()));
+                    startActivity(intent);
+                    floatBallView.createFloatView(MainActivity.this);
                 }
-                FloatBallView.getInstance(MainActivity.this).createFloatView();
+                floatBallView.createFloatView(MainActivity.this);
                 mMediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-                Intent intent1 = mMediaProjectionManager.createScreenCaptureIntent();
-                screenshotLauncher.launch(intent1);
+                Intent intent = mMediaProjectionManager.createScreenCaptureIntent();
+                screenshotLauncher.launch(intent);
             } else {
-                FloatBallView.getInstance(MainActivity.this).removeFloatView();
+                floatBallView.removeFloatView();
                 Intent stopIntent = new Intent(MainActivity.this,ScreenshotService.class);
                 stopService(stopIntent);
                 unbindService(connection);
             }
         });
-
-        FloatBallView.getInstance(MainActivity.this).onFloatViewClick(v -> {
+        floatBallView.onFloatViewClick(v -> {
             screenshotBinder.Screenshot();
         });
 
@@ -256,6 +224,28 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.toolbar, menu);
         return true;
     }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()){
+            //    打开相机
+            case R.id.camera:
+                File photo = new File(getExternalCacheDir(),"photo.jpg");
+                Uri photoUri = FileProvider.getUriForFile(this, "com.OcrTranslator.fileprovider", photo);
+                requestPhotoLauncher.launch(photoUri);
+                break;
+        }
+        return true;
+    }
+
+//    拍照并启动OCR活动
+    ActivityResultLauncher<Uri> requestPhotoLauncher = registerForActivityResult(new ActivityResultContracts.TakePicture(),
+            result-> {
+                if (result) {
+                    imagePath = getExternalCacheDir().getPath() + "/photo.jpg";
+                    ocr();
+                }
+            });
 
     //    打开相册
     private void openAlbum() {
@@ -294,36 +284,6 @@ public class MainActivity extends AppCompatActivity {
         ocr();
     }
 
-//    OCR活动
-    private void ocr() {
-        Intent intent =new Intent(MainActivity.this, OcrActivity.class);
-        intent.putExtra("from", from.getSelectedItem().toString());
-        intent.putExtra("to", to.getSelectedItem().toString());
-        intent.putExtra("path", imagePath);
-        intent.putExtra("requestScreenshot", REQUEST_SCREENSHOT);
-        REQUEST_SCREENSHOT = false;
-        requestOcrLauncher.launch(intent);
-    }
-
-    //        获取从相册返回的ocr结果并写进文本框
-    ActivityResultLauncher<Intent> requestOcrLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        assert result.getData() != null;
-                        String ocrText = result.getData().getStringExtra("ocrText");
-                        String resultText = result.getData().getStringExtra("resultText");
-                        if (ocrText != null){
-                            editText.setText(ocrText);
-                        }
-                        if (resultText != null){
-                            textView.setText(resultText);
-                        }
-                    }
-                }
-            });
-
     private String getImagePath(Uri uri, String selection) {
         String path = null;
         Cursor cursor = getContentResolver().query(uri,null,selection,null,null);
@@ -336,48 +296,39 @@ public class MainActivity extends AppCompatActivity {
         return path;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()){
-//            打开相机
-            case R.id.camera:
-                File outputImage = new File(getExternalCacheDir(),"output_image.jpg");
-                photoUri = FileProvider.getUriForFile(this,"com.OcrTranslator.fileprovider", outputImage);
-                takePhoto();
-                break;
-//            打开滑动菜单
-            case android.R.id.home:
-                mainLayout.openDrawer(GravityCompat.START);
-                break;
-            default:
-        }
-        return true;
+//    OCR活动
+    private void ocr() {
+        Intent intent =new Intent(MainActivity.this, OcrActivity.class);
+        intent.putExtra("from", from.getSelectedItem().toString());
+        intent.putExtra("to", to.getSelectedItem().toString());
+        intent.putExtra("path", imagePath);
+        intent.putExtra("requestScreenshot", REQUEST_SCREENSHOT);
+        REQUEST_SCREENSHOT = false;
+        requestOcrLauncher.launch(intent);
     }
 
-    private void takePhoto() {
-        Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
-        requestPhotoLauncher.launch(intent);
-    }
-
-    //    获取相机返回的照片地址并启动OCR活动
-    ActivityResultLauncher<Intent> requestPhotoLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        imagePath = "/storage/emulated/0/Android/data/com.OcrTranslator/cache/output_image.jpg";
-                        ocr();
+    //        获取返回的ocr结果并写进文本框
+    ActivityResultLauncher<Intent> requestOcrLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+            result ->  {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    assert result.getData() != null;
+                    String ocrText = result.getData().getStringExtra("ocrText");
+                    String resultText = result.getData().getStringExtra("resultText");
+                    if (ocrText != null){
+                        editText.setText(ocrText);
+                    }
+                    if (resultText != null){
+                        textView.setText(resultText);
                     }
                 }
             });
 
 //    翻译
-    private void trans(List<String> transText, String from, String to) {
-        TransService transService = new TransService();
-        String address = transService.TransResult(transText, from, to);
+    private void translate(String transText, String from, String to) {
+        TransUrl transUrl = new TransUrl();
+        String url = transUrl.url(transText, from, to);
         final String[] result = {""};
-        HttpUtil.sendOkHttpRequest(address, new Callback() {
+        HttpUtil.sendOkHttpRequest(url, new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
 
@@ -386,7 +337,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 assert response.body() != null;
-                List<TransResult> transResults = Utility.handleTransResultResponse(response.body().string());
+                List<TransResult> transResults = JsonParse.handleTransResponse(response.body().string());
                 runOnUiThread(() -> {
                     try {
                         for (int i = 0; i < Objects.requireNonNull(transResults).size(); i++){
@@ -396,16 +347,13 @@ public class MainActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-
                 });
             }
         });
     }
 
     ActivityResultLauncher<Intent> screenshotLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-        new ActivityResultCallback<ActivityResult>() {
-        @Override
-        public void onActivityResult(ActivityResult result) {
+        result ->  {
             if (result.getResultCode() == Activity.RESULT_CANCELED) {
                 Log.e(TAG, "User cancel");
             } else {
@@ -436,7 +384,6 @@ public class MainActivity extends AppCompatActivity {
                 bindService(service, connection, BIND_AUTO_CREATE);
                 startForegroundService(service);
             }
-        }
     });
 
 //    定义广播接收器，用于执行Service服务的请求（内部类）
@@ -449,7 +396,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-//    定义广播接收器，用于执行来自截图活动的请求（内部类）
+//    定义广播接收器，用于执行来自ocr活动的请求（内部类）
     private class OcrBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {

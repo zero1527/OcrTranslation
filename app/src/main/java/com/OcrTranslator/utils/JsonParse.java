@@ -13,7 +13,7 @@ import org.json.JSONObject;
 
 import java.util.List;
 
-public class Utility {
+public class JsonParse {
 
     public static OcrResult handleOcrResultResponse(String response) {
         Log.d("handleOcrResultResponse",response);
@@ -30,7 +30,7 @@ public class Utility {
         return null;
     }
 
-    public static List<TransResult> handleTransResultResponse(String response) {
+    public static List<TransResult> handleTransResponse(String response) {
         Log.d("handleTransResultResponse",response);
         if(!TextUtils.isEmpty(response)){
             try {
